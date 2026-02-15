@@ -4,27 +4,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Introducing Delegate</title>
+  <title>Nikhil Garg</title>
   <meta name="description"
-    content="Multi-agent software engineering with configurable workflows. Local-first, browser-based, open source.">
+    content="Nikhil Garg — databases, AI/ML infra, building things.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script defer src="https://cloud.umami.is/script.js" data-website-id="e51cb202-f182-4377-97eb-2b580f70ef5c"></script>
   <link
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap"
     rel="stylesheet">
   <style>
     :root {
       --bg: #141415;
       --surface: #1a1a1c;
-      --surface-2: #222224;
       --border: #2a2a2d;
-      --text: #cccccd;
-      --text-dim: #858587;
+      --text: #b0b0b2;
+      --text-bright: #e0e0e1;
+      --text-dim: #656567;
       --green: #4ade80;
-      --green-dim: #4ade8033;
-      --amber: #fbbf24;
-      --red: #f87171;
     }
 
     * {
@@ -37,600 +33,150 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Source Serif 4', Georgia, serif;
-      font-size: 18px;
-      line-height: 1.72;
+      font-size: 17px;
+      line-height: 1.7;
       -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 80px 24px 120px;
+    .page {
+      max-width: 520px;
+      padding: 80px 24px;
     }
 
-    .logo {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 20px;
-      font-weight: 500;
-      color: var(--green);
-      margin-bottom: 64px;
-      letter-spacing: -0.02em;
-    }
-
-    .logo .chevron {
-      opacity: 0.5;
-    }
-
-    h1 {
+    .name {
       font-family: 'Source Serif 4', Georgia, serif;
-      font-size: 40px;
+      font-size: 28px;
       font-weight: 600;
-      line-height: 1.2;
-      color: #eee;
-      margin-bottom: 16px;
+      color: var(--text-bright);
       letter-spacing: -0.02em;
-    }
-
-    .subtitle {
-      font-size: 20px;
-      color: var(--text-dim);
-      margin-bottom: 64px;
-      line-height: 1.5;
-    }
-
-    .date {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      color: var(--text-dim);
-      margin-bottom: 48px;
-    }
-
-    h2 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--green);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 72px;
-      margin-bottom: 24px;
-    }
-
-    p {
-      margin-bottom: 24px;
-    }
-
-    a {
-      color: var(--green);
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    strong {
-      color: #eee;
-      font-weight: 600;
-    }
-
-    code {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85em;
-      background: var(--surface-2);
-      padding: 2px 7px;
-      border-radius: 4px;
-    }
-
-    pre {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px 24px;
-      margin: 28px 0;
-      overflow-x: auto;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--text-dim);
-    }
-
-    pre strong {
-      color: var(--text);
-      font-weight: 400;
-    }
-
-    hr {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 64px 0;
-    }
-
-    .phases {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      margin: 40px 0;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-    }
-
-    .phase {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 14px 20px;
-      border-left: 2px solid var(--border);
-      position: relative;
-    }
-
-    .phase:last-child {
-      border-left-color: var(--green);
-    }
-
-    .phase-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--border);
-      flex-shrink: 0;
-      position: absolute;
-      left: -5px;
-    }
-
-    .phase:last-child .phase-dot {
-      background: var(--green);
-      box-shadow: 0 0 8px var(--green-dim);
-    }
-
-    .phase-label {
-      color: var(--text-dim);
-      min-width: 200px;
-    }
-
-    .phase:last-child .phase-label {
-      color: var(--green);
-    }
-
-    .phase-form {
-      color: var(--text-dim);
-      opacity: 0.5;
-    }
-
-    .phase:last-child .phase-form {
-      color: var(--text);
-      opacity: 1;
-    }
-
-    .workflow-diagram {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 32px 24px;
-      margin: 32px 0;
-      overflow-x: auto;
-    }
-
-    .workflow-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-    }
-
-    .workflow-stage {
-      padding: 6px 14px;
-      border-radius: 4px;
-      background: var(--surface-2);
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-      white-space: nowrap;
-    }
-
-    .workflow-stage.active {
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    .workflow-stage.human {
-      border-color: var(--amber);
-      color: var(--amber);
-    }
-
-    .workflow-arrow {
-      color: var(--text-dim);
-      opacity: 0.3;
-      flex-shrink: 0;
-    }
-
-    .code-filename {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--text-dim);
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-bottom: none;
-      border-radius: 8px 8px 0 0;
-      padding: 8px 16px;
-      margin-top: 28px;
-      display: inline-block;
-    }
-
-    .code-filename+pre {
-      margin-top: 0;
-      border-radius: 0 8px 8px 8px;
-    }
-
-    .cta {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 32px;
-      margin: 48px 0;
-    }
-
-    .cta h3 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 16px;
-      font-weight: 500;
-      color: #eee;
-      margin-bottom: 12px;
-    }
-
-    .cta p {
-      color: var(--text-dim);
       margin-bottom: 20px;
     }
 
-    .cta p:last-of-type {
-      margin-bottom: 0;
+    .bio {
+      margin-bottom: 40px;
+      color: var(--text);
     }
 
-    .cta-links {
-      display: flex;
-      gap: 24px;
-      margin-top: 20px;
+    .bio a {
+      color: var(--text-bright);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .bio a:hover {
+      color: var(--green);
+      border-color: var(--green);
+    }
+
+    .divider {
+      width: 32px;
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 32px;
+    }
+
+    .section-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
     }
 
-    .cta-links a {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+    .posts {
+      list-style: none;
+      margin-bottom: 40px;
     }
 
-    .footer {
-      margin-top: 80px;
-      padding-top: 24px;
-      border-top: 1px solid var(--border);
+    .posts li {
+      margin-bottom: 8px;
+    }
+
+    .posts a {
+      color: var(--text-bright);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .posts a:hover {
+      color: var(--green);
+      border-color: var(--green);
+    }
+
+    .posts .date {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
       color: var(--text-dim);
-      display: flex;
-      justify-content: space-between;
+      margin-left: 10px;
     }
 
-    @media (max-width: 600px) {
-      .container {
-        padding: 48px 20px 80px;
-      }
+    .links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
 
-      h1 {
-        font-size: 30px;
-      }
+    .links a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      transition: color 0.2s;
+    }
 
-      .subtitle {
-        font-size: 18px;
-      }
+    .links a:hover {
+      color: var(--green);
+    }
 
-      .phase-label {
-        min-width: 140px;
-      }
-
-      .phase-form {
-        display: none;
-      }
-
-      .workflow-row {
-        flex-wrap: wrap;
-      }
-
-      .cta-links {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .footer {
-        flex-direction: column;
-        gap: 8px;
-      }
+    .links a::before {
+      content: '↗ ';
+      opacity: 0.5;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+  <div class="page">
+    <h1 class="name">Nikhil Garg</h1>
 
-    <div class="logo"><span class="chevron">&gt;</span> delegate</div>
+    <p class="bio">
+      Interested in databases and AI/ML infra. Ex-founder of
+      <a href="https://fennel.ai">Fennel AI</a>,
+      currently at Meta. Father of one boy. Eminem fan.
+    </p>
 
-    <h1>The hard problem isn't the agents —<br>it's everything between them</h1>
+    <div class="divider"></div>
 
-    <p class="subtitle">What I learned trying to run multiple AI agents on real
-      projects, and what I built because of it.</p>
+    <div class="section-label">Writing</div>
+    <ul class="posts">
+      <li>
+        <a href="/delegate/">Introducing Delegate</a>
+        <span class="date">2026</span>
+      </li>
+    </ul>
 
-    <p class="date">February 2025</p>
-
-    <!-- ── PHASES ────────────────────────────────── -->
-
-    <h2>How we got here</h2>
-
-    <p>Software engineering has gone through four transitions in rapid
-      succession. Each one changed not just how we write code, but where.</p>
-
-    <div class="phases">
-      <div class="phase">
-        <div class="phase-dot"></div>
-        <span class="phase-label">Write code in an IDE</span>
-        <span class="phase-form">VS Code, IntelliJ</span>
-      </div>
-      <div class="phase">
-        <div class="phase-dot"></div>
-        <span class="phase-label">AI autocompletes lines</span>
-        <span class="phase-form">Copilot, early Cursor</span>
-      </div>
-      <div class="phase">
-        <div class="phase-dot"></div>
-        <span class="phase-label">Agent in the sidebar</span>
-        <span class="phase-form">Cursor, Windsurf</span>
-      </div>
-      <div class="phase">
-        <div class="phase-dot"></div>
-        <span class="phase-label">Agent in the terminal</span>
-        <span class="phase-form">Claude Code, Codex</span>
-      </div>
-      <div class="phase">
-        <div class="phase-dot"></div>
-        <span class="phase-label">Multi-agent teams</span>
-        <span class="phase-form">???</span>
-      </div>
+    <div class="section-label">Elsewhere</div>
+    <div class="links">
+      <a href="https://github.com/nikhilgarg28">GitHub</a>
+      <a href="https://x.com/nikhilgarg28">Twitter</a>
+      <a href="https://linkedin.com/in/nikhilgarg28">LinkedIn</a>
     </div>
-
-    <p>The first four transitions had a natural home. Autocomplete lives in the
-      editor. A sidebar agent lives in the IDE. A terminal agent lives in the
-      terminal. But the fifth is different.</p>
-
-    <p>I wanted to run multiple side projects in parallel — have agents working
-      on one while I focused on another. When you're running three agents
-      simultaneously, you're not editing alongside them. You're
-      <strong>managing</strong> them. And the right form factor for managing a
-      team isn't an IDE or a terminal.
-    </p>
-
-    <p>The obvious answer is tmux — split your terminal into panes, run an agent
-      in each one. I tried this. It works until it doesn't. Three agents means
-      three panes to watch, with no unified view of what's done, what's stuck,
-      and what needs you. You're manually tracking which agent finished, which
-      branch to review, which to merge first. There's no shared state between
-      them, no way to coordinate handoffs, and when you come back after twenty
-      minutes, you're reading scrollback in three panes trying to reconstruct
-      what happened. It scales to about two agents before the cognitive overhead
-      eats the productivity gain.</p>
-
-    <p>What I needed was a dashboard I could check — delegate work, switch to my
-      own editor, glance back when something needed my attention. I also needed
-      a server process that could stay alive, manage long-running agent
-      sessions, and eventually respond to webhooks. And I wanted to talk to my
-      team — voice input is natural for giving instructions and nearly
-      impossible in a terminal.</p>
-
-    <!-- ── DISCOVERY: GIT ────────────────────────── -->
-
-    <h2>The first wall: git</h2>
-
-    <p>I started by giving multiple Claude Code instances their own branches and
-      letting them work. The agents were fine. They could read code, write
-      implementations, run tests. The problem was everything around them.</p>
-
-    <p>Two agents touching the same file. An agent that decided to
-      <code>git rebase</code> on its own and corrupted the branch history.
-      Worktrees left behind after a crash. Merge conflicts that appeared only
-      after both agents had finished. A merge that moved <code>main</code>
-      forward while I had uncommitted changes, leaving my working tree in a
-      confusing state.
-    </p>
-
-    <p>I spent more time in <code>git reflog</code> cleaning up messes than I
-      saved by running agents in parallel. The productivity gain was negative.
-    </p>
-
-    <p>The solution was isolating agents completely. Each agent works in its own
-      git worktree with a dedicated branch, forked from <code>main</code> at the
-      moment the task is created. Agents are forbidden from rebasing, merging,
-      or checking out branches — enforced at the OS permission level, not just
-      in the prompt. Merges happen through a separate process: create a
-      temporary branch, rebase onto current <code>main</code>, run the test
-      pipeline, fast-forward <code>main</code> in one atomic operation. If
-      anything fails, nothing is modified. The repository is never corrupted.
-    </p>
-
-    <p>This infrastructure is invisible when it works. But without it,
-      multi-agent coding is a liability.</p>
-
-    <!-- ── DISCOVERY: PROCESS ────────────────────── -->
-
-    <h2>The second wall: process</h2>
-
-    <p>Once git was solid, the next problem surfaced. An agent finishes coding.
-      Now what? Who reviews it? How do I know it's ready? What if the review
-      finds problems — does it go back to the same agent? What if I want human
-      approval before anything merges?</p>
-
-    <p>Each project I worked on had slightly different needs. One needed strict
-      review. Another was a prototype where I wanted auto-merge. A third needed
-      tests to pass before review even started.</p>
-
-    <p>I was rebuilding a different ad-hoc pipeline for every project. What I
-      actually needed was a way to define workflows — stages, transitions,
-      assignment rules, quality gates — that could vary per project but share
-      the same execution engine. And those workflows needed to be able to reach
-      external systems: post to Slack when a task is ready for review, create a
-      GitHub PR when code is approved, update Linear when a task ships.</p>
-
-    <!-- ── DELEGATE ──────────────────────────────── -->
-
-    <h2>Introducing Delegate</h2>
-
-    <p>Delegate is what came out of all this. It's a browser-based multi-agent
-      tool with a configurable workflow engine running against your local git
-      repository. You talk to a manager agent who decomposes your request into
-      tasks, assigns them to engineering agents, coordinates reviews, and
-      orchestrates merges. You review and approve before anything lands on
-      <code>main</code>.
-    </p>
-
-    <pre><span style="color: var(--text-dim);"># install delegate</span>
-<strong>$ pip install delegate-ai</strong> 
-
-<span style="color: var(--text-dim);"># start delegate, go to the browser and tell your team what to build</span>
-<strong>$ delegate start</strong> 
-</pre>
-
-    <p>The interaction model is async. Describe what you want built, switch to
-      your own editor, come back when the tab says <strong>(2) Delegate</strong>
-      — two tasks need your attention. The interface shows what every agent is
-      doing in real time — files being read, tests being run, commits being made
-      — without flooding you with messages. For the times you need a quick
-      terminal command without switching windows, there's <code>/shell</code>.
-    </p>
-
-    <p><strong>Workflows are defined in Python.</strong> Each stage specifies
-      who it's assigned to, what conditions must be met to enter it, and what
-      happens on entry and exit. Transitions are enforced by the engine — no LLM
-      can skip a stage or bypass a guard.</p>
-
-    <div class="workflow-diagram">
-      <div class="workflow-row">
-        <span class="workflow-stage">Todo</span>
-        <span class="workflow-arrow">→</span>
-        <span class="workflow-stage active">Planning</span>
-        <span class="workflow-arrow">→</span>
-        <span class="workflow-stage active">In Progress</span>
-        <span class="workflow-arrow">→</span>
-        <span class="workflow-stage active">In Review</span>
-        <span class="workflow-arrow">→</span>
-        <span class="workflow-stage human">Approval</span>
-        <span class="workflow-arrow">→</span>
-        <span class="workflow-stage">Merging</span>
-        <span class="workflow-arrow">→</span>
-        <span class="workflow-stage">Done</span>
-      </div>
-    </div>
-
-    <div class="code-filename">workflow.py</div>
-    <pre><span style="color: var(--text-dim);"># API is alpha — this is the direction, not the final syntax</span>
-
-<span style="color: var(--green);">class</span> InReview(Stage):
-    label = "In Review"
-
-    <span style="color: var(--green);">def</span> guard(self, ctx):
-        ctx.require_clean_worktree()
-        ctx.require_commits()
-
-    <span style="color: var(--green);">def</span> assign(self, ctx):
-        <span style="color: var(--text-dim);"># Never assign to the author</span>
-        <span style="color: var(--green);">return</span> ctx.pick(
-            role=<span style="color: var(--amber);">"engineer"</span>,
-            exclude=ctx.task.dri
-        )
-
-    <span style="color: var(--green);">def</span> enter(self, ctx):
-        ctx.slack.post(
-            <span style="color: var(--amber);">f"Task </span>{ctx.task.id}<span style="color: var(--amber);"> ready for review"</span>
-        )</pre>
-
-    <p>Stages can be assigned to an AI agent, a human, or the system itself.
-      Integrations with external systems — Slack, GitHub, Linear — are hooks on
-      stage transitions. The workflow engine is the core of the product. Agents
-      are workers plugged into it.</p>
-
-    <!-- ── HONEST ────────────────────────────────── -->
-
-    <h2>Where it stands</h2>
-
-    <p>Delegate is in early alpha. It works for single-player local development
-      — one human managing a team of AI agents against a local git repository.
-      The git orchestration, merge queue, and review pipeline are functional and
-      handling real work.</p>
-
-    <p>The workflow API is alpha and will change. Integrations with external
-      systems are designed for but not yet built — the hook points exist in the
-      workflow engine, the connectors don't.</p>
-
-    <p>A few things I've learned the hard way:</p>
-
-    <p><strong>Agent quality is a function of context, not just model.</strong>
-      A cheaper model with a persistent session often outperforms an expensive
-      model with a fresh context window each turn. The agent that remembers
-      reading a file doesn't re-read it, doesn't re-derive the architecture, and
-      doesn't make contradictory decisions. Per-turn cost is a misleading
-      metric. Per-correct-outcome cost is what matters.</p>
-
-    <p><strong>The merge queue is everything.</strong> Without automated rebase,
-      pipeline gates, and atomic fast-forward merges, multi-agent development is
-      multi-agent chaos. Every bug I've fixed in the merge pipeline has been
-      worth ten prompt engineering improvements.</p>
-
-    <p><strong>Reviews catch what prompts miss.</strong> Having a separate agent
-      review code with fresh eyes catches bugs the author agent is blind to.
-      This doesn't require AI coordination magic — it's the same reason human
-      code review works.</p>
-
-    <!-- ── FUTURE ────────────────────────────────── -->
-
-    <h2>What's next</h2>
-
-    <p>Local-first is the foundation, not the ceiling. The workflow engine is
-      designed to support hybrid teams — human engineers and AI agents working
-      side by side, with configurable workflows that encode each team's process.
-      The same stage can be assigned to a person or an agent depending on the
-      task.</p>
-
-    <p>I'm particularly interested in what happens when the infrastructure is
-      right and the models keep improving. Faster inference means the manager
-      responds in seconds, not minutes. Better reasoning means agents produce
-      code that passes review on the first try. The infrastructure I'm building
-      today — worktree isolation, workflow engine, merge orchestration — becomes
-      more valuable as agents get smarter, not less.</p>
-
-    <p>Delegate is MIT licensed and open source.</p>
-
-    <!-- ── CTA ────────────────────────────────────── -->
-
-    <div class="cta">
-      <h3>Shape what Delegate becomes</h3>
-      <p>I'm looking for early users who want to push on this with me. What
-        workflows would you define? What integrations matter most? What's broken
-        about multi-agent coding that you wish someone would fix?</p>
-      <div class="cta-links">
-        <a href="https://github.com/nikhilgarg28/delegate/discussions">↗ Join
-          the discussion on GitHub</a>
-        <a href="https://github.com/nikhilgarg28/delegate">↗ Browse the
-          source</a>
-      </div>
-    </div>
-
-    <!-- ── FOOTER ────────────────────────────────── -->
-
-    <div class="footer">
-      <span>MIT License</span>
-      <span class="logo" style="margin-bottom: 0; font-size: 13px;"><span
-          class="chevron">&gt;</span> delegate</span>
-    </div>
-
   </div>
+
+  <!-- ── ANALYTICS ──────────────────────────────── -->
+  <script defer src="https://cloud.umami.is/script.js"
+    data-website-id="e51cb202-f182-4377-97eb-2b580f70ef5c"></script>
 
 </body>
 
