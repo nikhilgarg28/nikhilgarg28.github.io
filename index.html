@@ -493,33 +493,43 @@
     <pre><span style="color: var(--text-dim);"># install delegate</span>
 <strong>$ pip install delegate-ai</strong> 
 
-<span style="color: var(--text-dim);"># start delegate, go to the browser, and tell your team what to build</span>
+<span style="color: var(--text-dim);"># start delegate, go to the browser and tell your team what to build</span>
 <strong>$ delegate start</strong> 
+</pre>
 
-  <p>The interaction model is async. Describe what you want built, switch to your own editor, come back when the tab says <strong>(2) Delegate</strong> — two tasks need your attention. The interface shows what every agent is doing in real time — files being read, tests being run, commits being made — without flooding you with messages. For the times you need a quick terminal command without switching windows, there's <code>/shell</code>.</p>
+    <p>The interaction model is async. Describe what you want built, switch to
+      your own editor, come back when the tab says <strong>(2) Delegate</strong>
+      — two tasks need your attention. The interface shows what every agent is
+      doing in real time — files being read, tests being run, commits being made
+      — without flooding you with messages. For the times you need a quick
+      terminal command without switching windows, there's <code>/shell</code>.
+    </p>
 
-  <p><strong>Workflows are defined in Python.</strong> Each stage specifies who it's assigned to, what conditions must be met to enter it, and what happens on entry and exit. Transitions are enforced by the engine — no LLM can skip a stage or bypass a guard.</p>
+    <p><strong>Workflows are defined in Python.</strong> Each stage specifies
+      who it's assigned to, what conditions must be met to enter it, and what
+      happens on entry and exit. Transitions are enforced by the engine — no LLM
+      can skip a stage or bypass a guard.</p>
 
-  <div class="workflow-diagram">
-    <div class="workflow-row">
-      <span class="workflow-stage">Todo</span>
-      <span class="workflow-arrow">→</span>
-      <span class="workflow-stage active">Planning</span>
-      <span class="workflow-arrow">→</span>
-      <span class="workflow-stage active">In Progress</span>
-      <span class="workflow-arrow">→</span>
-      <span class="workflow-stage active">In Review</span>
-      <span class="workflow-arrow">→</span>
-      <span class="workflow-stage human">Approval</span>
-      <span class="workflow-arrow">→</span>
-      <span class="workflow-stage">Merging</span>
-      <span class="workflow-arrow">→</span>
-      <span class="workflow-stage">Done</span>
+    <div class="workflow-diagram">
+      <div class="workflow-row">
+        <span class="workflow-stage">Todo</span>
+        <span class="workflow-arrow">→</span>
+        <span class="workflow-stage active">Planning</span>
+        <span class="workflow-arrow">→</span>
+        <span class="workflow-stage active">In Progress</span>
+        <span class="workflow-arrow">→</span>
+        <span class="workflow-stage active">In Review</span>
+        <span class="workflow-arrow">→</span>
+        <span class="workflow-stage human">Approval</span>
+        <span class="workflow-arrow">→</span>
+        <span class="workflow-stage">Merging</span>
+        <span class="workflow-arrow">→</span>
+        <span class="workflow-stage">Done</span>
+      </div>
     </div>
-  </div>
 
-  <div class="code-filename">workflow.py</div>
-  <pre><span style="color: var(--text-dim);"># API is alpha — this is the direction, not the final syntax</span>
+    <div class="code-filename">workflow.py</div>
+    <pre><span style="color: var(--text-dim);"># API is alpha — this is the direction, not the final syntax</span>
 
 <span style="color: var(--green);">class</span> InReview(Stage):
     label = "In Review"
