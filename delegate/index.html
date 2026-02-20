@@ -404,11 +404,11 @@
     <p>I wanted to run multiple side projects in parallel — have agents working
       on one while I focused on another. When you're running three agents
       simultaneously, you're not editing alongside them. You're
-      <strong>managing</strong> them. And the right form factor for managing a
-      team isn't an IDE or a terminal.
+      <strong>managing</strong> them. What should be the right form factor for
+      managing a team of agents?
     </p>
 
-    <p>The obvious answer is tmux — split your terminal into panes, run an agent
+    <p>One obvious answer is tmux — split your terminal into panes, run an agent
       in each one. I tried this. It works until it doesn't. Three agents means
       three panes to watch, with no unified view of what's done, what's stuck,
       and what needs you. You're manually tracking which agent finished, which
@@ -421,11 +421,9 @@
     <p>What I needed was a dashboard I could check — delegate work, switch to my
       own editor, glance back when something needed my attention. I also needed
       a server process that could stay alive, manage long-running agent
-      sessions, and eventually respond to webhooks. And I wanted to talk to my
-      team — voice input is natural for giving instructions and nearly
-      impossible in a terminal.</p>
+      sessions, and eventually respond to webhooks.
 
-    <!-- ── DISCOVERY: GIT ────────────────────────── -->
+      <!-- ── DISCOVERY: GIT ────────────────────────── -->
 
     <h2>The first wall: git</h2>
 
@@ -445,46 +443,36 @@
       saved by running agents in parallel. The productivity gain was negative.
     </p>
 
-    <p>The solution was isolating agents completely. Each agent works in its own
-      git worktree with a dedicated branch, forked from <code>main</code> at the
-      moment the task is created. Agents are forbidden from rebasing, merging,
-      or checking out branches — enforced at the OS permission level, not just
-      in the prompt. Merges happen through a separate process: create a
-      temporary branch, rebase onto current <code>main</code>, run the test
-      pipeline, fast-forward <code>main</code> in one atomic operation. If
-      anything fails, nothing is modified. The repository is never corrupted.
+    <p>The obvious answer is to isolate agents completely in their own
+      worktrees and/or branches. This is easier said than done though because
+      agents are rather creative and resourceful and may still bypass the
+      prompt instructions. So some form of sandboxing is needed to prevent
+      agents from being able to do things they shouldn't. Further, come merge
+      time,
+      all operations need to be atomic and idempotent.
     </p>
 
-    <p>This infrastructure is invisible when it works. But without it,
-      multi-agent coding is a liability.</p>
 
     <!-- ── DISCOVERY: ENVIRONMENT ──────────────────── -->
 
     <h2>The second wall: environment</h2>
 
-    <p>With git solved, I expected agents to be productive. They weren't —
-      because they were all sharing one environment. Agent A installs a
-      dependency, Agent B's <code>pip install</code> clobbers it. Agent A runs
-      tests, Agent B's test run collides on the same port. Two agents both
-      trying to <code>npm install</code> in the same <code>node_modules</code>
-      directory. Everything interferes with everything.</p>
-
-    <p>I wanted something simple: each agent develops against its own isolated
-      environment — its own virtualenv, its own <code>node_modules</code>, its
-      own build artifacts — so they can write code, install dependencies, and
-      <strong>run the full test suite</strong> without stepping on each other.
-      Running tests matters because I don't want to review a diff that doesn't
-      pass tests. The agent should verify its own work before asking me to look
-      at it.
+    <p>After git, the next problem is environment isolation. Agents are all
+      sharing one environment - Agent A's <code>pip install</code> clobbers
+      Agent B's
+      dependency. Agent A runs tests, Agent B's test run collides on the same
+      port. Two agents both trying to <code>npm install</code> in the same
+      <code>node_modules</code> directory. Everything interferes with
+      everything.
     </p>
 
-    <p>This turned out to be surprisingly hard. Git worktrees share a single
-      <code>.git</code> directory, which means tools like
-      <code>pip install -e .</code> that depend on the repo root get confused.
-      Python venvs contain hardcoded absolute paths. Node resolves
-      <code>node_modules</code> by walking up the directory tree, so a worktree
-      nested inside the repo picks up the wrong one. Every language ecosystem
-      has its own assumptions about where it lives, and most of those
+    <p>Creating automated environment per agent, unsurprisingly, turned out to
+      be hard. Git worktrees share a single <code>.git</code> directory, which
+      means tools like <code>pip install -e .</code> that depend on the repo
+      root get confused. Python venvs contain hardcoded absolute paths. Node
+      resolves <code>node_modules</code> by walking up the directory tree, so a
+      worktree nested inside the repo picks up the wrong one. Every language
+      ecosystem has its own assumptions about where it lives, and many of those
       assumptions break when you have five copies of the same repo checked out
       simultaneously.
     </p>
@@ -492,9 +480,24 @@
     <p>What I wanted was some sort of auto-setup of an isolated environment for
       the repository which agents can themselves edit and improve as needed.</p>
 
+    <!-- ── DISCOVERY: Security ─────────────────────── -->
+
+    <h2>The third wall: security</h2>
+    <p>I wans't comfortable with multiple agents running potentially
+      unsupervised
+      having full access to the machine. What if they were to corrupt my git
+      repo?
+      Or mistakenly delete my database? Or download malware?
+    </p>
+    <p>I wanted a reasonable level of sandboxing that prevented them from doing
+      harm while still allowing them to do their job. I could run them all in
+      a separate docker container and maybe that's the right answer - but I just
+      wanted something simpler and lighter weight.
+    </p>
+
     <!-- ── DISCOVERY: WORKFLOW ─────────────────────── -->
 
-    <h2>The third wall: workflow</h2>
+    <h2>The fourth wall: workflow</h2>
 
     <p>Once git and environment isolation were solid, the next problem surfaced.
       An agent finishes coding. Now what? Who reviews it? How do I know it's
@@ -524,15 +527,6 @@
       <code>main</code>.
     </p>
 
-    <p><strong>Agents are completely independent.</strong> Each agent works in
-      its own git worktree on a dedicated branch — isolated filesystem, isolated
-      environment. Delegate auto-generates a bash setup script for each repo
-      that creates a working environment from scratch — installing dependencies,
-      creating virtualenvs, setting up build tools. It works out of the box for
-      common project layouts, though it's not foolproof. Agents can iterate on
-      the script themselves as they discover what's missing. The script is
-      committed to the repo (<code>.delegate/setup.sh</code>), so you can edit
-      it directly if needed.</p>
 
     <pre><span style="color: var(--text-dim);"># install delegate</span>
 <strong>$ pip install delegate-ai</strong>
@@ -540,32 +534,92 @@
 <span style="color: var(--text-dim);"># start delegate, go to the browser and tell your team what to build</span>
 <strong>$ delegate start</strong></pre>
 
-    <p>The interaction model is async. Describe what you want built, switch to
-      your own editor, come back when the tab says <strong>(2) Delegate</strong>
-      — two tasks need your attention. The interface shows what every agent is
-      doing in real time — files being read, tests being run, commits being made
-      — without flooding you with messages. For the times you need a quick
-      terminal command without switching windows, there's <code>/shell</code>.
+    <!-- I want video to be centered (i.e. go outside the container so far) -->
+  </div>
+
+
+  <video style="margin: 0 auto; display: block; max-width: 100%;" src="https://github.com/user-attachments/assets/5d2f5a8f-8bae-45b7-85c9-53ccb1a47fa3"
+    width="80%" controls muted playsinline>
+    Your browser does not support the video tag.
+  </video>
+
+  <div class="container">
+    <h2>Agents have independent git repos</h2>
+    <p>Each agent works in its own git worktree on a dedicated branch.
+      Permissions are enforced via
+      sandbox such that agents can't add/remove worktrees, branches, do rebase,
+      reset, etc - all such operations are handled by deterministic Python code.
     </p>
 
-    <p><strong>Workflows are defined in Python.</strong> There are four stage
-      types: agent stages (an AI codes), human stages (you review, approve, or
-      edit), auto stages (the system merges, deploys, or tests), and terminal
-      stages. Each stage declares its possible outcomes, and every outcome maps
-      to a transition. Guards block entry until preconditions are met. The
-      engine enforces all of it — no LLM can skip a stage or bypass a guard.</p>
+    <h2>Environment is isolated</h2>
+    <p>Delegate auto-generates a bash
+      setup script for each repo that creates a working environment from scratch
+      - installing dependencies, creating virtualenvs, setting up build tools.
+      It works out of the box for common project layouts, though it's not
+      foolproof.
+      Agents can iterate on the script themselves as they discover what's
+      missing.
+      The script is committed to the repo (<code>.delegate/setup.sh</code>), so
+      you
+      can edit it directly if needed.
+    </p>
+
+    <h2>Agents run in a secured sandbox</h2>
+    <p>Agents are run in a
+      secured sandbox that limits write access to either delegate's own folders,
+      temp directory or project's .git directory (but importantly, not the
+      working
+      directory). As a result, they can either write to delegate manager
+      worktrees
+      or your project's .git folder. Further, they are disallowed from running
+      git
+      operations that mutate the branch topology (e.g. rebase, merge, reset,
+      etc)
+      so even with access to the .git folder, they cannot corrupt the project.
+
+      The network access is also limited to a allowlist of domains (default
+      being
+      common package managers and git forges) and can be further customized via
+      CLI.
+    </p>
+
+
+    <h2>The interaction model is async</h2>
+    <p>Describe what you want
+      built, switch to your own editor, come back when the tab says <strong>(2)
+        Delegate</strong> — two tasks need your attention. The interface shows
+      what every agent is doing in real time — files being read, tests being
+      run, commits being made — without flooding you with messages. For the
+      times you need a quick terminal command without switching windows,
+      there's <code>/shell</code>.
+    </p>
+
+    <h2>Delegate is GUI based</h2>
+    <p>Even though I love being in the
+      terminal, I have come to believe that such an async model requires one to
+      observe
+      many agents live which requires deeper UI capabilities than a terminal can
+      provide. I have bundled a PWA for native app experience but hope to make
+      a real native app (using Tauri?) at some point.
+    </p>
+
+    <h2>Workflows are defined in Python</h2>
+    <p>The workflow API is early and actively evolving. Currently, it hardcodes
+      the "standard" workflow - coding, peer review, approval, revise, merge.
+      From here on, I want to evolve the workflow API to be more flexible and
+      powerful.
 
     <div class="workflow-diagram">
       <div class="workflow-row">
         <span class="workflow-stage active">Coding</span>
         <span class="workflow-arrow">→</span>
-        <span class="workflow-stage human">Review</span>
+        <span class="workflow-stage active">Peer Agent Review</span>
+        <span class="workflow-arrow">→</span>
+        <span class="workflow-stage human">Approval</span>
         <span class="workflow-arrow">→</span>
         <span class="workflow-stage active">Revise</span>
         <span class="workflow-arrow">→</span>
-        <span class="workflow-stage">Merging</span>
-        <span class="workflow-arrow">→</span>
-        <span class="workflow-stage">Done</span>
+        <span class="workflow-stage">Merge</span>
       </div>
       <div
         style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); margin-top: 12px; display: flex; gap: 24px;">
@@ -575,92 +629,6 @@
       </div>
     </div>
 
-    <div class="code-filename">workflow.py</div>
-    <pre><span style="color: var(--green);">from</span> delegate.workflow <span style="color: var(--green);">import</span> (
-    Workflow, AgentStage, HumanStage, AutoStage, TerminalStage,
-    DelegatePicks, HumanAction, DiffViewer,
-)
-
-<span style="color: var(--text-dim);"># ── Stages ──────────────────────────────────────────</span>
-
-<span style="color: var(--green);">class</span> Coding(AgentStage):
-    outcomes = [<span style="color: var(--amber);">"done"</span>]
-
-    <span style="color: var(--green);">async def</span> assign(self, ctx):
-        <span style="color: var(--green);">return</span> DelegatePicks(
-            candidates=ctx.team.agents,
-            instruction=<span style="color: var(--amber);">"Pick the agent most familiar with this area."</span>,
-        )
-
-    <span style="color: var(--green);">def</span> instructions(self, ctx):
-        base = <span style="color: var(--amber);">"Implement the changes described in the task brief."</span>
-        <span style="color: var(--green);">if</span> ctx.review_comments:
-            base += <span style="color: var(--amber);">"\n\nPrevious review feedback:\n"</span>
-            <span style="color: var(--green);">for</span> c <span style="color: var(--green);">in</span> ctx.review_comments:
-                base += <span style="color: var(--amber);">f"- {c.by}: {c.text}\n"</span>
-        <span style="color: var(--green);">return</span> base
-
-
-<span style="color: var(--green);">class</span> Review(HumanStage):
-    outcomes = [<span style="color: var(--amber);">"approved"</span>, <span style="color: var(--amber);">"approved_with_edits"</span>, <span style="color: var(--amber);">"changes_requested"</span>]
-
-    <span style="color: var(--green);">async def</span> assign(self, ctx):
-        <span style="color: var(--green);">return</span> DelegatePicks(
-            candidates=ctx.team.humans,
-            exclude=[ctx.task.assignee],
-            instruction=<span style="color: var(--amber);">"Pick a reviewer. Should not be the coder."</span>,
-        )
-
-    <span style="color: var(--green);">async def</span> action(self, ctx):
-        <span style="color: var(--green);">return</span> HumanAction(
-            viewer=DiffViewer(files=ctx.task.changed_files),
-            editable=<span style="color: var(--green);">True</span>,     <span style="color: var(--text-dim);"># human can touch up code inline</span>
-            comment_enabled=<span style="color: var(--green);">True</span>,
-        )
-
-    <span style="color: var(--green);">async def</span> enter(self, ctx):
-        <span style="color: var(--green);">if</span> <span style="color: var(--amber);">"slack"</span> <span style="color: var(--green);">in</span> ctx.capabilities:
-            <span style="color: var(--green);">await</span> ctx.slack.post(<span style="color: var(--amber);">f"Task {ctx.task.id} ready for review"</span>)
-
-
-<span style="color: var(--green);">class</span> Merging(AutoStage):
-    outcomes = [<span style="color: var(--amber);">"done"</span>, <span style="color: var(--amber);">"conflict"</span>]
-
-    <span style="color: var(--green);">async def</span> guard(self, ctx):
-        ci = <span style="color: var(--green);">await</span> ctx.git.get_ci_status(ctx.task.branch)
-        <span style="color: var(--green);">return</span> ci.status == <span style="color: var(--amber);">"passing"</span>
-
-    <span style="color: var(--green);">async def</span> action(self, ctx):
-        result = <span style="color: var(--green);">await</span> ctx.git.merge(
-            repo=ctx.task.repo, branch=ctx.task.branch, into=<span style="color: var(--amber);">"main"</span>,
-        )
-        <span style="color: var(--green);">return</span> <span style="color: var(--amber);">"conflict"</span> <span style="color: var(--green);">if</span> result.conflict <span style="color: var(--green);">else</span> <span style="color: var(--amber);">"done"</span>
-
-
-<span style="color: var(--text-dim);"># ── Workflow ─────────────────────────────────────────</span>
-
-engineering = Workflow(
-    name=<span style="color: var(--amber);">"engineering"</span>,
-    stages=[Coding, Review, Revise, Merging, Done],
-    transitions={
-        (Coding,  <span style="color: var(--amber);">"done"</span>):                Review,
-        (Review,  <span style="color: var(--amber);">"approved"</span>):            Merging,
-        (Review,  <span style="color: var(--amber);">"approved_with_edits"</span>): Merging,
-        (Review,  <span style="color: var(--amber);">"changes_requested"</span>):  Revise,
-        (Revise,  <span style="color: var(--amber);">"done"</span>):                Review,
-        (Merging, <span style="color: var(--amber);">"done"</span>):                Done,
-        (Merging, <span style="color: var(--amber);">"conflict"</span>):            Review,
-    },
-    initial=Coding,
-)</pre>
-
-    <p>The workflow is a directed graph. Stages define what happens at each step
-      — the <code>Review</code> stage shows a diff viewer where you can approve,
-      touch up the code inline, or request changes. <code>DelegatePicks</code>
-      gives the manager agent a candidate pool and lets it choose who to assign
-      based on judgment and workload. Integrations with external systems —
-      Slack, GitHub, Linear — are hooks on stage transitions. The workflow
-      engine is the core of the product. Agents are workers plugged into it.</p>
 
     <!-- ── HONEST ────────────────────────────────── -->
 
@@ -673,7 +641,8 @@ engineering = Workflow(
 
     <p>The workflow API is functional but still evolving. Integrations with
       external systems are designed for but not yet built — the hook points
-      exist in the workflow engine, the connectors don't.</p>
+      exist in the workflow engine, the connectors don't. Environment setup
+      works for some common cases but needs to become lot more robust.
 
     <p>A few things I've learned the hard way:</p>
 
@@ -689,8 +658,9 @@ engineering = Workflow(
       multi-agent chaos. Every bug I've fixed in the merge pipeline has been
       worth ten prompt engineering improvements.</p>
 
-    <p><strong>Reviews catch what prompts miss.</strong> Having a separate agent
-      review code with fresh eyes catches bugs the author agent is blind to.
+    <p><strong>Peer reviews catch what prompts miss.</strong> Having a separate
+      peer agent review code with fresh eyes catches bugs the author agent is
+      blind to.
       This doesn't require AI coordination magic — it's the same reason human
       code review works.</p>
 
