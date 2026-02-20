@@ -9,7 +9,6 @@
     content="Multi-agent software engineering with configurable workflows. Local-first, browser-based, open source.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script defer src="https://cloud.umami.is/script.js" data-website-id="e51cb202-f182-4377-97eb-2b580f70ef5c"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap"
     rel="stylesheet">
@@ -459,14 +458,48 @@
     <p>This infrastructure is invisible when it works. But without it,
       multi-agent coding is a liability.</p>
 
-    <!-- ── DISCOVERY: PROCESS ────────────────────── -->
+    <!-- ── DISCOVERY: ENVIRONMENT ──────────────────── -->
 
-    <h2>The second wall: process</h2>
+    <h2>The second wall: environment</h2>
 
-    <p>Once git was solid, the next problem surfaced. An agent finishes coding.
-      Now what? Who reviews it? How do I know it's ready? What if the review
-      finds problems — does it go back to the same agent? What if I want human
-      approval before anything merges?</p>
+    <p>With git solved, I expected agents to be productive. They weren't —
+      because they were all sharing one environment. Agent A installs a
+      dependency, Agent B's <code>pip install</code> clobbers it. Agent A runs
+      tests, Agent B's test run collides on the same port. Two agents both
+      trying to <code>npm install</code> in the same <code>node_modules</code>
+      directory. Everything interferes with everything.</p>
+
+    <p>I wanted something simple: each agent develops against its own isolated
+      environment — its own virtualenv, its own <code>node_modules</code>, its
+      own build artifacts — so they can write code, install dependencies, and
+      <strong>run the full test suite</strong> without stepping on each other.
+      Running tests matters because I don't want to review a diff that doesn't
+      pass tests. The agent should verify its own work before asking me to look
+      at it.
+    </p>
+
+    <p>This turned out to be surprisingly hard. Git worktrees share a single
+      <code>.git</code> directory, which means tools like
+      <code>pip install -e .</code> that depend on the repo root get confused.
+      Python venvs contain hardcoded absolute paths. Node resolves
+      <code>node_modules</code> by walking up the directory tree, so a worktree
+      nested inside the repo picks up the wrong one. Every language ecosystem
+      has its own assumptions about where it lives, and most of those
+      assumptions break when you have five copies of the same repo checked out
+      simultaneously.
+    </p>
+
+    <p>What I wanted was some sort of auto-setup of an isolated environment for
+      the repository which agents can themselves edit and improve as needed.</p>
+
+    <!-- ── DISCOVERY: WORKFLOW ─────────────────────── -->
+
+    <h2>The third wall: workflow</h2>
+
+    <p>Once git and environment isolation were solid, the next problem surfaced.
+      An agent finishes coding. Now what? Who reviews it? How do I know it's
+      ready? What if the review finds problems — does it go back to the same
+      agent? What if I want human approval before anything merges?</p>
 
     <p>Each project I worked on had slightly different needs. One needed strict
       review. Another was a prototype where I wanted auto-merge. A third needed
@@ -491,12 +524,21 @@
       <code>main</code>.
     </p>
 
+    <p><strong>Agents are completely independent.</strong> Each agent works in
+      its own git worktree on a dedicated branch — isolated filesystem, isolated
+      environment. Delegate auto-generates a bash setup script for each repo
+      that creates a working environment from scratch — installing dependencies,
+      creating virtualenvs, setting up build tools. It works out of the box for
+      common project layouts, though it's not foolproof. Agents can iterate on
+      the script themselves as they discover what's missing. The script is
+      committed to the repo (<code>.delegate/setup.sh</code>), so you can edit
+      it directly if needed.</p>
+
     <pre><span style="color: var(--text-dim);"># install delegate</span>
-<strong>$ pip install delegate-ai</strong> 
+<strong>$ pip install delegate-ai</strong>
 
 <span style="color: var(--text-dim);"># start delegate, go to the browser and tell your team what to build</span>
-<strong>$ delegate start</strong> 
-</pre>
+<strong>$ delegate start</strong></pre>
 
     <p>The interaction model is async. Describe what you want built, switch to
       your own editor, come back when the tab says <strong>(2) Delegate</strong>
@@ -506,55 +548,119 @@
       terminal command without switching windows, there's <code>/shell</code>.
     </p>
 
-    <p><strong>Workflows are defined in Python.</strong> Each stage specifies
-      who it's assigned to, what conditions must be met to enter it, and what
-      happens on entry and exit. Transitions are enforced by the engine — no LLM
-      can skip a stage or bypass a guard.</p>
+    <p><strong>Workflows are defined in Python.</strong> There are four stage
+      types: agent stages (an AI codes), human stages (you review, approve, or
+      edit), auto stages (the system merges, deploys, or tests), and terminal
+      stages. Each stage declares its possible outcomes, and every outcome maps
+      to a transition. Guards block entry until preconditions are met. The
+      engine enforces all of it — no LLM can skip a stage or bypass a guard.</p>
 
     <div class="workflow-diagram">
       <div class="workflow-row">
-        <span class="workflow-stage">Todo</span>
+        <span class="workflow-stage active">Coding</span>
         <span class="workflow-arrow">→</span>
-        <span class="workflow-stage active">Planning</span>
+        <span class="workflow-stage human">Review</span>
         <span class="workflow-arrow">→</span>
-        <span class="workflow-stage active">In Progress</span>
-        <span class="workflow-arrow">→</span>
-        <span class="workflow-stage active">In Review</span>
-        <span class="workflow-arrow">→</span>
-        <span class="workflow-stage human">Approval</span>
+        <span class="workflow-stage active">Revise</span>
         <span class="workflow-arrow">→</span>
         <span class="workflow-stage">Merging</span>
         <span class="workflow-arrow">→</span>
         <span class="workflow-stage">Done</span>
       </div>
+      <div
+        style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); margin-top: 12px; display: flex; gap: 24px;">
+        <span><span style="color: var(--green);">■</span> agent</span>
+        <span><span style="color: var(--amber);">■</span> human</span>
+        <span><span style="color: var(--text-dim);">■</span> auto</span>
+      </div>
     </div>
 
     <div class="code-filename">workflow.py</div>
-    <pre><span style="color: var(--text-dim);"># API is alpha — this is the direction, not the final syntax</span>
+    <pre><span style="color: var(--green);">from</span> delegate.workflow <span style="color: var(--green);">import</span> (
+    Workflow, AgentStage, HumanStage, AutoStage, TerminalStage,
+    DelegatePicks, HumanAction, DiffViewer,
+)
 
-<span style="color: var(--green);">class</span> InReview(Stage):
-    label = "In Review"
+<span style="color: var(--text-dim);"># ── Stages ──────────────────────────────────────────</span>
 
-    <span style="color: var(--green);">def</span> guard(self, ctx):
-        ctx.require_clean_worktree()
-        ctx.require_commits()
+<span style="color: var(--green);">class</span> Coding(AgentStage):
+    outcomes = [<span style="color: var(--amber);">"done"</span>]
 
-    <span style="color: var(--green);">def</span> assign(self, ctx):
-        <span style="color: var(--text-dim);"># Never assign to the author</span>
-        <span style="color: var(--green);">return</span> ctx.pick(
-            role=<span style="color: var(--amber);">"engineer"</span>,
-            exclude=ctx.task.dri
+    <span style="color: var(--green);">async def</span> assign(self, ctx):
+        <span style="color: var(--green);">return</span> DelegatePicks(
+            candidates=ctx.team.agents,
+            instruction=<span style="color: var(--amber);">"Pick the agent most familiar with this area."</span>,
         )
 
-    <span style="color: var(--green);">def</span> enter(self, ctx):
-        ctx.slack.post(
-            <span style="color: var(--amber);">f"Task </span>{ctx.task.id}<span style="color: var(--amber);"> ready for review"</span>
-        )</pre>
+    <span style="color: var(--green);">def</span> instructions(self, ctx):
+        base = <span style="color: var(--amber);">"Implement the changes described in the task brief."</span>
+        <span style="color: var(--green);">if</span> ctx.review_comments:
+            base += <span style="color: var(--amber);">"\n\nPrevious review feedback:\n"</span>
+            <span style="color: var(--green);">for</span> c <span style="color: var(--green);">in</span> ctx.review_comments:
+                base += <span style="color: var(--amber);">f"- {c.by}: {c.text}\n"</span>
+        <span style="color: var(--green);">return</span> base
 
-    <p>Stages can be assigned to an AI agent, a human, or the system itself.
-      Integrations with external systems — Slack, GitHub, Linear — are hooks on
-      stage transitions. The workflow engine is the core of the product. Agents
-      are workers plugged into it.</p>
+
+<span style="color: var(--green);">class</span> Review(HumanStage):
+    outcomes = [<span style="color: var(--amber);">"approved"</span>, <span style="color: var(--amber);">"approved_with_edits"</span>, <span style="color: var(--amber);">"changes_requested"</span>]
+
+    <span style="color: var(--green);">async def</span> assign(self, ctx):
+        <span style="color: var(--green);">return</span> DelegatePicks(
+            candidates=ctx.team.humans,
+            exclude=[ctx.task.assignee],
+            instruction=<span style="color: var(--amber);">"Pick a reviewer. Should not be the coder."</span>,
+        )
+
+    <span style="color: var(--green);">async def</span> action(self, ctx):
+        <span style="color: var(--green);">return</span> HumanAction(
+            viewer=DiffViewer(files=ctx.task.changed_files),
+            editable=<span style="color: var(--green);">True</span>,     <span style="color: var(--text-dim);"># human can touch up code inline</span>
+            comment_enabled=<span style="color: var(--green);">True</span>,
+        )
+
+    <span style="color: var(--green);">async def</span> enter(self, ctx):
+        <span style="color: var(--green);">if</span> <span style="color: var(--amber);">"slack"</span> <span style="color: var(--green);">in</span> ctx.capabilities:
+            <span style="color: var(--green);">await</span> ctx.slack.post(<span style="color: var(--amber);">f"Task {ctx.task.id} ready for review"</span>)
+
+
+<span style="color: var(--green);">class</span> Merging(AutoStage):
+    outcomes = [<span style="color: var(--amber);">"done"</span>, <span style="color: var(--amber);">"conflict"</span>]
+
+    <span style="color: var(--green);">async def</span> guard(self, ctx):
+        ci = <span style="color: var(--green);">await</span> ctx.git.get_ci_status(ctx.task.branch)
+        <span style="color: var(--green);">return</span> ci.status == <span style="color: var(--amber);">"passing"</span>
+
+    <span style="color: var(--green);">async def</span> action(self, ctx):
+        result = <span style="color: var(--green);">await</span> ctx.git.merge(
+            repo=ctx.task.repo, branch=ctx.task.branch, into=<span style="color: var(--amber);">"main"</span>,
+        )
+        <span style="color: var(--green);">return</span> <span style="color: var(--amber);">"conflict"</span> <span style="color: var(--green);">if</span> result.conflict <span style="color: var(--green);">else</span> <span style="color: var(--amber);">"done"</span>
+
+
+<span style="color: var(--text-dim);"># ── Workflow ─────────────────────────────────────────</span>
+
+engineering = Workflow(
+    name=<span style="color: var(--amber);">"engineering"</span>,
+    stages=[Coding, Review, Revise, Merging, Done],
+    transitions={
+        (Coding,  <span style="color: var(--amber);">"done"</span>):                Review,
+        (Review,  <span style="color: var(--amber);">"approved"</span>):            Merging,
+        (Review,  <span style="color: var(--amber);">"approved_with_edits"</span>): Merging,
+        (Review,  <span style="color: var(--amber);">"changes_requested"</span>):  Revise,
+        (Revise,  <span style="color: var(--amber);">"done"</span>):                Review,
+        (Merging, <span style="color: var(--amber);">"done"</span>):                Done,
+        (Merging, <span style="color: var(--amber);">"conflict"</span>):            Review,
+    },
+    initial=Coding,
+)</pre>
+
+    <p>The workflow is a directed graph. Stages define what happens at each step
+      — the <code>Review</code> stage shows a diff viewer where you can approve,
+      touch up the code inline, or request changes. <code>DelegatePicks</code>
+      gives the manager agent a candidate pool and lets it choose who to assign
+      based on judgment and workload. Integrations with external systems —
+      Slack, GitHub, Linear — are hooks on stage transitions. The workflow
+      engine is the core of the product. Agents are workers plugged into it.</p>
 
     <!-- ── HONEST ────────────────────────────────── -->
 
@@ -565,9 +671,9 @@
       The git orchestration, merge queue, and review pipeline are functional and
       handling real work.</p>
 
-    <p>The workflow API is alpha and will change. Integrations with external
-      systems are designed for but not yet built — the hook points exist in the
-      workflow engine, the connectors don't.</p>
+    <p>The workflow API is functional but still evolving. Integrations with
+      external systems are designed for but not yet built — the hook points
+      exist in the workflow engine, the connectors don't.</p>
 
     <p>A few things I've learned the hard way:</p>
 
@@ -631,6 +737,10 @@
     </div>
 
   </div>
+
+  <!-- ── ANALYTICS ──────────────────────────────── -->
+  <script data-goatcounter="https://nikhil.goatcounter.com/count" async
+    src="//gc.zgo.at/count.js"></script>
 
 </body>
 
